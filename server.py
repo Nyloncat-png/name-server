@@ -83,7 +83,36 @@ class TimeServer:
 
 class EchoServer:
     async def handle_stream(self, reader, writer):
-        pass
+        try:
+            while True:
+                data = await reader.readline()
+                if not data:
+                    break
+
+                try:
+                    request = json.loads(data.decode().strip())
+
+                    if "cmd" not in request:
+                        reply = {"status": "error", "message": "missing cmd"}
+                    elif request["cmd"] == "echo":
+                        if "text" not in request:
+                            reply = {"status": "error", "message": "missing text"}
+                        else:
+                            reply = {"status": "ok", "text": request["text"]}
+                    else:
+                        reply = {"status": "error", "message": f"unknown command"}
+
+                except JSONDecodeError:
+                    reply = {"status": "error", "message": "invalid json"}
+
+                writer.write((json.dumps(reply) + "\n").encode())
+                await writer.drain()
+
+        except Exception as e:
+            print(f"Error EchoServer: {e}")
+        finally:
+            writer.close()
+            await writer.wait_closed()
 
 async def main():
     name_server = NameServer()
