@@ -73,4 +73,7 @@ async def main():
         await asyncio.gather(name.serve_forever(), time.serve_forever(), echo.serve_forever())
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("Closing servers")
